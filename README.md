@@ -15,6 +15,39 @@ O comando cria ou reutiliza `.venv`, instala as dependências de
 `requirements.txt`, executa as ingestões da ONS e do INMET e, por fim, gera a
 base consolidada em `data/processed/base.parquet`.
 
+## Base processada
+
+O arquivo `data/processed/base.parquet` é a base consolidada utilizada pelas
+próximas etapas do projeto. Possui 40.896 registros horários, 22 variáveis e
+cobre o período de 01/01/2022 a 31/08/2026. Cada linha representa uma hora do
+subsistema Nordeste, combinando carga elétrica da ONS com as médias regionais
+das estações meteorológicas do INMET.
+
+| Variável | Tipo | Unidade | Descrição |
+|---|---|---|---|
+| `subsystem_code` | texto | — | Código do subsistema elétrico; nesta base, `NE`. |
+| `timestamp` | datetime | — | Data e hora da observação, sem timezone após a consolidação. |
+| `load_mw` | decimal | MWmed | Carga de energia horária do subsistema Nordeste. |
+| `source_year` | inteiro | ano | Ano do arquivo anual da ONS que originou o registro. |
+| `precipitation_mm` | decimal | mm | Precipitação média registrada pelas estações disponíveis. |
+| `pressure_station_hpa` | decimal | hPa | Pressão atmosférica média no nível das estações. |
+| `pressure_max_hpa` | decimal | hPa | Média regional da pressão máxima horária. |
+| `pressure_min_hpa` | decimal | hPa | Média regional da pressão mínima horária. |
+| `global_radiation_kj_m2` | decimal | kJ/m² | Radiação solar global média; ausências pontuais foram interpoladas linearmente. |
+| `temperature_c` | decimal | °C | Temperatura média do ar. |
+| `dew_point_c` | decimal | °C | Temperatura média do ponto de orvalho. |
+| `temperature_max_c` | decimal | °C | Média regional da temperatura máxima horária. |
+| `temperature_min_c` | decimal | °C | Média regional da temperatura mínima horária. |
+| `dew_point_max_c` | decimal | °C | Média regional da temperatura máxima do ponto de orvalho. |
+| `dew_point_min_c` | decimal | °C | Média regional da temperatura mínima do ponto de orvalho. |
+| `humidity_max_pct` | decimal | % | Média regional da umidade relativa máxima horária. |
+| `humidity_min_pct` | decimal | % | Média regional da umidade relativa mínima horária. |
+| `humidity_pct` | decimal | % | Umidade relativa média do ar. |
+| `wind_gust_ms` | decimal | m/s | Velocidade média das rajadas máximas de vento. |
+| `wind_speed_ms` | decimal | m/s | Velocidade média horária do vento. |
+| `wind_direction_deg` | decimal | graus | Direção regional do vento, calculada por média circular. |
+| `station_count` | inteiro | estações | Quantidade de estações que contribuíram no horário. |
+
 ## Inventário dos dados intermediários
 
 Inventário gerado a partir dos arquivos disponíveis em `data/interim/`:
