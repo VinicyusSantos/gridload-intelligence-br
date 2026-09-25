@@ -3,6 +3,18 @@
 Plataforma de ciência de dados para análise e previsão da carga elétrica do
 subsistema Nordeste, combinando dados públicos da ONS e do INMET.
 
+## Executar o pipeline completo
+
+A partir da raiz do projeto, execute:
+
+```bash
+python -m src.pipeline
+```
+
+O comando cria ou reutiliza `.venv`, instala as dependências de
+`requirements.txt`, executa as ingestões da ONS e do INMET e, por fim, gera a
+base consolidada em `data/processed/base.parquet`.
+
 ## Inventário dos dados intermediários
 
 Inventário gerado a partir dos arquivos disponíveis em `data/interim/`:
