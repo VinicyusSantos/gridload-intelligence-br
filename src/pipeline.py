@@ -21,10 +21,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 VENV_DIR = PROJECT_ROOT / ".venv"
 REQUIREMENTS = PROJECT_ROOT / "requirements.txt"
 
-# Adicione novos passos a esta sequencia conforme o projeto evoluir.
 PIPELINE_STEPS = (
     ("Ingestao ONS + INMET", PROJECT_ROOT / "src/ingestion/ingestion.py"),
     ("Processamento ONS + INMET", PROJECT_ROOT / "src/processing/processing.py"),
+    (
+        "Engenharia de features",
+        PROJECT_ROOT / "src/features/feature_engineering.py",
+    ),
 )
 
 
