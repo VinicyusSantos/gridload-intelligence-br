@@ -12,8 +12,24 @@ python -m src.pipeline
 ```
 
 O comando cria ou reutiliza `.venv`, instala as dependências de
-`requirements.txt`, executa as ingestões da ONS e do INMET e, por fim, gera a
-base consolidada em `data/processed/base.parquet`.
+`requirements.txt` e executa, nesta ordem:
+
+1. ingestão dos dados da ONS e do INMET;
+2. consolidação em `data/processed/base.parquet`;
+3. engenharia de features em `data/processed/base_final.parquet`;
+4. treinamento dos modelos XGBoost para os horizontes de 1h, 6h e 24h.
+
+O treinamento reutiliza as features e os hiperparâmetros selecionados em
+`notebooks/06_forecasting.ipynb`, mas reajusta os modelos com todos os dados
+rotulados que acabaram de chegar ao pipeline. Os artefatos são atualizados em
+`src/models/xgb_1h.json`, `src/models/xgb_6h.json` e
+`src/models/xgb_24h.json`. O arquivo `src/models/training_metadata.json`
+registra o período, a quantidade de linhas e a configuração utilizada em cada
+execução.
+
+Na ingestão do INMET, os ZIPs de anos encerrados são reutilizados. O ZIP do ano
+corrente é baixado novamente em cada execução, permitindo que novas observações
+entrem na base e no treinamento.
 
 ## Base processada
 

@@ -2,6 +2,8 @@
 
 Baixa os ZIPs anuais originais para ``data/raw`` e produz em
 ``data/interim`` uma base limpa por estacao e uma base horaria regional.
+Arquivos de anos encerrados podem ser reutilizados, mas o ZIP do ano corrente
+e baixado novamente em toda execucao para incorporar observacoes recentes.
 
 Para limitar o processamento a estacoes especificas, defina a variavel
 ``INMET_STATION_CODES`` com codigos separados por virgula, por exemplo:
@@ -29,7 +31,9 @@ import numpy as np
 import pandas as pd
 
 
-YEARS = range(2022, 2027)
+START_YEAR = 2022
+CURRENT_YEAR = datetime.now(timezone.utc).year
+YEARS = range(START_YEAR, CURRENT_YEAR + 1)
 BASE_URL = "https://portal.inmet.gov.br/uploads/dadoshistoricos/{year}.zip"
 NORTHEAST_UFS = {"AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE"}
 
@@ -140,6 +144,32 @@ def latest_valid_archive(year: int) -> Path | None:
         if candidate.stat().st_size > 0 and zipfile.is_zipfile(candidate):
             return candidate
     return None
+
+
+def obtain_archive(
+    year: int,
+    *,
+    current_year: int = CURRENT_YEAR,
+    raw_dir: Path = RAW_DIR,
+) -> tuple[Path, str]:
+    """Obtem o ZIP anual aplicando cache apenas a anos encerrados."""
+    if year > current_year:
+        raise ValueError(f"Nao e possivel obter dados de um ano futuro: {year}")
+
+    if year < current_year:
+        cached_archive = latest_valid_archive(year)
+        if cached_archive is not None:
+            print(f"Reutilizando dados do INMET de {year}: {cached_archive}")
+            return cached_archive, "reused"
+
+    destination = raw_dir / f"INMET_{year}.zip"
+    url = BASE_URL.format(year=year)
+    if year == current_year:
+        print(f"Atualizando dados do INMET do ano corrente ({year})...")
+    else:
+        print(f"Baixando dados do INMET de {year}...")
+    download(url, destination)
+    return destination, "downloaded"
 
 
 def metadata_value(metadata: dict[str, str], *keys: str) -> str | None:
@@ -420,19 +450,14 @@ def main() -> None:
 
     for year in YEARS:
         url = BASE_URL.format(year=year)
-        destination = latest_valid_archive(year)
-        if destination is None:
-            destination = RAW_DIR / f"INMET_{year}.zip"
-            print(f"Baixando dados do INMET de {year}...")
-            download(url, destination)
-        else:
-            print(f"Reutilizando dados do INMET de {year}: {destination}")
+        destination, archive_action = obtain_archive(year)
         archives.append((year, destination))
         manifest["archives"].append(
             {
                 "year": year,
                 "url": url,
                 "file": str(destination),
+                "action": archive_action,
                 "bytes": destination.stat().st_size,
                 "sha256": sha256_file(destination),
             }

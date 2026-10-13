@@ -3,7 +3,7 @@ numpy
 matplotlib
 plotly
 scikit-learn
-xgboost
+xgboost==3.4.1
 lightgbm
 shap
 jupyter

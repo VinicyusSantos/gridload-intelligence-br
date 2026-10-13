@@ -28,6 +28,10 @@ PIPELINE_STEPS = (
         "Engenharia de features",
         PROJECT_ROOT / "src/features/feature_engineering.py",
     ),
+    (
+        "Treinamento dos modelos XGBoost",
+        PROJECT_ROOT / "src/models/train_models.py",
+    ),
 )
 
 

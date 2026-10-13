@@ -6,5 +6,7 @@ venv
 .venv/
 venv/
 env/
+__pycache__/
+*.py[cod]
 data/raw
 AGENTS.md
