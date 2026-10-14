@@ -199,6 +199,56 @@ def filename_uf(filename: str) -> str | None:
     return match.group(1) if match else None
 
 
+def filename_period_end(filename: str) -> datetime | None:
+    """Extrai do nome do CSV a data final da cobertura acumulada."""
+    match = re.search(
+        r"_A_(\d{2}-\d{2}-\d{4})\.CSV$",
+        filename,
+        flags=re.IGNORECASE,
+    )
+    if match is None:
+        return None
+    try:
+        return datetime.strptime(match.group(1), "%d-%m-%Y")
+    except ValueError:
+        return None
+
+
+def select_latest_station_members(
+    members: list[str],
+) -> tuple[list[str], list[str]]:
+    """Mantem apenas o CSV de maior cobertura para cada estacao.
+
+    O ZIP do ano corrente pode acumular mais de uma fotografia anual da mesma
+    estacao, por exemplo uma ate agosto e outra ate setembro. Ler ambas duplica
+    todos os horarios do periodo sobreposto.
+    """
+    selected: dict[str, tuple[datetime, str]] = {}
+    unclassified: list[str] = []
+    superseded: list[str] = []
+
+    for member in members:
+        station_code = filename_station_code(member)
+        period_end = filename_period_end(member)
+        if station_code is None or period_end is None:
+            unclassified.append(member)
+            continue
+
+        current = selected.get(station_code)
+        candidate = (period_end, member)
+        if current is None or candidate > current:
+            if current is not None:
+                superseded.append(current[1])
+            selected[station_code] = candidate
+        else:
+            superseded.append(member)
+
+    selected_members = unclassified + [
+        member for _, member in selected.values()
+    ]
+    return sorted(selected_members), sorted(superseded)
+
+
 def find_column(columns: list[str], required_tokens: tuple[str, ...]) -> str | None:
     for column in columns:
         normalized = normalize_label(column)
@@ -446,6 +496,7 @@ def main() -> None:
         "selected_station_codes": sorted(selected_codes) if selected_codes else None,
         "archives": [],
         "skipped_files": [],
+        "superseded_files": [],
     }
 
     for year in YEARS:
@@ -469,11 +520,23 @@ def main() -> None:
     for year, archive_path in archives:
         print(f"Processando {archive_path.name}...")
         with zipfile.ZipFile(archive_path) as archive:
-            members = [
+            archive_members = [
                 name
                 for name in archive.namelist()
                 if name.lower().endswith(".csv") and not name.endswith("/")
             ]
+            members, superseded_members = select_latest_station_members(
+                archive_members
+            )
+            manifest["superseded_files"].extend(
+                {"year": year, "file": member_name}
+                for member_name in superseded_members
+            )
+            if superseded_members:
+                print(
+                    f"Ignorando {len(superseded_members)} arquivo(s) "
+                    "acumulado(s) substituido(s) por versoes mais recentes."
+                )
             for member_name in members:
                 try:
                     frame = parse_station_member(

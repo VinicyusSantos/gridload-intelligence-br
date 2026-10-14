@@ -144,12 +144,24 @@ def add_targets(frame: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
-def engineer_features(frame: pd.DataFrame) -> pd.DataFrame:
-    """Executa toda a engenharia de features e remove bordas incompletas."""
+def add_predictor_features(frame: pd.DataFrame) -> pd.DataFrame:
+    """Cria apenas as variaveis conhecidas no instante da previsao."""
     result = prepare_base(frame)
     result = add_calendar_features(result)
     result = add_cyclical_features(result)
     result = add_load_history_features(result)
+    return result
+
+
+def engineer_inference_features(frame: pd.DataFrame) -> pd.DataFrame:
+    """Cria features de inferencia sem exigir valores futuros conhecidos."""
+    result = add_predictor_features(frame)
+    return result.dropna().reset_index(drop=True)
+
+
+def engineer_features(frame: pd.DataFrame) -> pd.DataFrame:
+    """Cria features e targets de treinamento e remove bordas incompletas."""
+    result = add_predictor_features(frame)
     result = add_targets(result)
     return result.dropna().reset_index(drop=True)
 

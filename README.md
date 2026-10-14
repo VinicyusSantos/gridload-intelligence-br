@@ -18,6 +18,7 @@ O comando cria ou reutiliza `.venv`, instala as dependências de
 2. consolidação em `data/processed/base.parquet`;
 3. engenharia de features em `data/processed/base_final.parquet`;
 4. treinamento dos modelos XGBoost para os horizontes de 1h, 6h e 24h.
+5. geração das previsões mais recentes para os três horizontes.
 
 O treinamento reutiliza as features e os hiperparâmetros selecionados em
 `notebooks/06_forecasting.ipynb`, mas reajusta os modelos com todos os dados
@@ -26,6 +27,12 @@ rotulados que acabaram de chegar ao pipeline. Os artefatos são atualizados em
 `src/models/xgb_24h.json`. O arquivo `src/models/training_metadata.json`
 registra o período, a quantidade de linhas e a configuração utilizada em cada
 execução.
+
+A inferência recria as mesmas features sem exigir targets futuros e preserva a
+última observação disponível. As três previsões são gravadas em
+`data/predictions/latest_forecasts.parquet` e em
+`data/predictions/latest_forecasts.json`, junto aos horários de origem e de
+previsão.
 
 Na ingestão do INMET, os ZIPs de anos encerrados são reutilizados. O ZIP do ano
 corrente é baixado novamente em cada execução, permitindo que novas observações

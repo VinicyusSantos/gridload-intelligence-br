@@ -32,6 +32,10 @@ PIPELINE_STEPS = (
         "Treinamento dos modelos XGBoost",
         PROJECT_ROOT / "src/models/train_models.py",
     ),
+    (
+        "Geracao das previsoes mais recentes",
+        PROJECT_ROOT / "src/inference/generate_forecasts.py",
+    ),
 )
 
 
