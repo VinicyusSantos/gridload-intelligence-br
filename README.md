@@ -375,46 +375,6 @@ função tenta `dia da semana + hora + feriado` e recua para `dia da semana +
 hora` quando a amostra for insuficiente. Sem amostra mínima, retorna contexto
 indisponível em vez de inventar um percentil.
 
-Exemplo para uma previsão:
-
-```python
-import pandas as pd
-
-from src.context.historical_percentile import historical_percentile
-
-history = pd.read_parquet("data/processed/base.parquet")
-context = historical_percentile(
-    history=history,
-    prediction=14_920.0,
-    target_timestamp="2026-10-20 18:00:00",
-    min_samples=30,
-)
-print(context["percentile_label"], context["interpretation"])
-```
-
-Para os três horizontes de uma vez:
-
-```python
-from src.context.historical_percentile import (
-    historical_percentiles_for_forecasts,
-)
-
-contexts = historical_percentiles_for_forecasts(
-    history=history,
-    forecasts={"1h": forecast_1h, "6h": forecast_6h, "24h": forecast_24h},
-    target_timestamps={
-        "1h": target_timestamp_1h,
-        "6h": target_timestamp_6h,
-        "24h": target_timestamp_24h,
-    },
-    min_samples=30,
-)
-```
-
-O adaptador `add_historical_context_to_forecasts()` enriquece diretamente o
-DataFrame produzido pela inferência e não altera modelos, features ou
-hiperparâmetros. A inferência operacional atual usa `use_holiday=False`.
-
 ## Explicabilidade
 
 O notebook `07_explainability.ipynb` usa `shap.TreeExplainer` para gráficos
