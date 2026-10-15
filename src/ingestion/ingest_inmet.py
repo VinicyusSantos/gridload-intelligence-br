@@ -44,7 +44,7 @@ INTERIM_DIR = Path("data/interim")
 STATIONS_OUTPUT = INTERIM_DIR / "weather_stations_clean.parquet"
 REGIONAL_OUTPUT = INTERIM_DIR / "weather_clean.parquet"
 
-USER_AGENT = "gridload-intelligence-br/0.1"
+USER_AGENT = "previsao-carga-eletrica-nordeste/0.1"
 DOWNLOAD_RETRIES = 3
 MISSING_VALUES = ["", "null", "NULL", "NaN", "-9999", "-9999,0", "-9999.0"]
 

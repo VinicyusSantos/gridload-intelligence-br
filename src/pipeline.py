@@ -1,4 +1,4 @@
-"""Ponto unico de execucao do pipeline do GridLoad Intelligence BR.
+"""Ponto unico de execucao do pipeline de previsao de carga do Nordeste.
 
 Uso, a partir da raiz do projeto::
 

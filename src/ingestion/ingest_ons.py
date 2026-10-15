@@ -26,7 +26,7 @@ output_path.parent.mkdir(parents=True, exist_ok=True)
 def open_url(url: str):
     request = Request(
         url,
-        headers={"User-Agent": "gridload-intelligence-br/0.1"},
+        headers={"User-Agent": "previsao-carga-eletrica-nordeste/0.1"},
     )
     return urlopen(request, timeout=120)
 

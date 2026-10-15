@@ -1,4 +1,4 @@
-"""Executa todos os pipelines de ingestao do GridLoad Intelligence BR."""
+"""Executa os pipelines de ingestao da previsao de carga do Nordeste."""
 
 from __future__ import annotations
 

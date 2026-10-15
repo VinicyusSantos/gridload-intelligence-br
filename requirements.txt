@@ -10,3 +10,4 @@ jupyter
 pyarrow
 statsmodels
 holidays
+streamlit>=1.66,<2

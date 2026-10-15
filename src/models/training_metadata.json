@@ -1,10 +1,10 @@
 {
-  "trained_at_utc": "2026-10-13T18:50:34.165440+00:00",
+  "trained_at_utc": "2026-10-15T14:15:28.220694+00:00",
   "source_notebook": "notebooks/06_forecasting.ipynb",
   "input_file": "data/processed/base_final.parquet",
-  "training_rows": 40704,
+  "training_rows": 41424,
   "period_start": "2022-01-08T00:00:00",
-  "period_end": "2026-08-30T23:00:00",
+  "period_end": "2026-09-29T23:00:00",
   "xgboost_version": "3.4.1",
   "models": {
     "1h": {

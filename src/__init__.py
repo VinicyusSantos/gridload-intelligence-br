@@ -1,1 +1,1 @@
-"""Codigo-fonte do GridLoad Intelligence BR."""
+"""Codigo-fonte da previsao de carga eletrica do subsistema Nordeste."""

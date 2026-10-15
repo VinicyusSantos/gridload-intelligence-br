@@ -23,6 +23,9 @@ from src.features.feature_engineering import (  # noqa: E402
     engineer_inference_features,
     read_base,
 )
+from src.context.historical_percentile import (  # noqa: E402
+    add_historical_context_to_forecasts,
+)
 from src.models.train_models import (  # noqa: E402
     INPUT as TRAINING_INPUT,
     METADATA_FILE as TRAINING_METADATA_FILE,
@@ -215,6 +218,12 @@ def main() -> None:
     specs = load_model_specs()
     training_metadata = read_json(TRAINING_METADATA_FILE)
     forecasts = generate_forecasts(feature_frame, specs, training_metadata)
+    forecasts = add_historical_context_to_forecasts(
+        history=base,
+        forecasts=forecasts,
+        min_samples=30,
+        use_holiday=False,
+    )
     save_parquet_atomic(forecasts, OUTPUT_PARQUET)
     save_manifest_atomic(forecasts, OUTPUT_JSON)
 
@@ -223,9 +232,16 @@ def main() -> None:
         f"{pd.Timestamp(forecasts['forecast_origin'].iloc[0])}"
     )
     for row in forecasts.itertuples(index=False):
+        if row.historical_context_status == "available":
+            context = (
+                f"{row.historical_percentile_label} historico "
+                f"(n={row.historical_sample_size})"
+            )
+        else:
+            context = f"contexto indisponivel: {row.historical_context_reason}"
         print(
             f"{row.horizon}: {row.forecast_timestamp} -> "
-            f"{row.predicted_load_mw:,.2f} MW"
+            f"{row.predicted_load_mw:,.2f} MW | {context}"
         )
     print(f"Previsoes salvas: {_display_path(OUTPUT_PARQUET)}")
     print(f"Manifesto salvo: {_display_path(OUTPUT_JSON)}")

@@ -1,7 +1,36 @@
-# GridLoad Intelligence BR
+# Previsão de carga elétrica do subsistema Nordeste
 
 Plataforma de ciência de dados para análise e previsão da carga elétrica do
 subsistema Nordeste, combinando dados públicos da ONS e do INMET.
+
+## Aplicação Streamlit
+
+A aplicação de portfólio apresenta a previsão atual, a explicabilidade SHAP e
+as métricas históricas de teste em três páginas. Depois de instalar as
+dependências, execute a partir da raiz do projeto:
+
+```bash
+streamlit run app.py
+```
+
+O botão **Atualizar previsões** refaz somente a inferência com a última base
+processada e com os modelos persistidos. Ele não executa ingestão e não
+retreina os modelos. O acesso às previsões pela interface está centralizado em
+`src/dashboard/forecast_service.py`.
+
+A explicação local é calculada para a observação atual. A importância SHAP
+global é lida de um artefato leve, que pode ser recriado após um novo
+treinamento com:
+
+```bash
+python -m src.explainability.build_shap_artifacts
+```
+
+Se não houver artefatos estruturados de comparação de modelos ou de previsões
+do teste, a página de desempenho informa essa limitação em vez de criar dados
+sintéticos. Os caminhos opcionais esperados são
+`data/evaluation/model_comparison.parquet` e
+`data/evaluation/test_predictions.parquet`.
 
 ## Executar o pipeline completo
 
@@ -32,7 +61,12 @@ A inferência recria as mesmas features sem exigir targets futuros e preserva a
 última observação disponível. As três previsões são gravadas em
 `data/predictions/latest_forecasts.parquet` e em
 `data/predictions/latest_forecasts.json`, junto aos horários de origem e de
-previsão.
+previsão. Cada resultado também recebe um contexto histórico por dia da semana
+e hora do instante previsto, como `P94 histórico`, calculado sem usar
+observações posteriores ao forecast.
+
+A metodologia, a API reutilizável e exemplos para 1h, 6h e 24h estão em
+[`docs/historical_context.md`](docs/historical_context.md).
 
 Na ingestão do INMET, os ZIPs de anos encerrados são reutilizados. O ZIP do ano
 corrente é baixado novamente em cada execução, permitindo que novas observações
