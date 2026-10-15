@@ -31,7 +31,11 @@ navigation = st.navigation(
     [
         st.Page("pages/overview.py", title="Visão Geral", icon=":material/dashboard:", default=True),
         st.Page("pages/explainability.py", title="Explicabilidade", icon=":material/psychology:"),
-        st.Page("pages/performance.py", title="Desempenho", icon=":material/monitoring:"),
+        st.Page(
+            "pages/performance.py",
+            title="Análise dos Modelos",
+            icon=":material/monitoring:",
+        ),
     ],
     position="sidebar",
 )

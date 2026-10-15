@@ -2,13 +2,25 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
-from src.dashboard.charts import recent_load_chart
+from src.dashboard.charts import (
+    baseline_comparison_chart,
+    recent_load_chart,
+    tuning_history_chart,
+    validation_model_chart,
+)
 from src.dashboard.config import TEST_METRICS
 from src.dashboard.explainability import group_shap_values
 from src.dashboard.forecast_service import forecast_summary
 from src.dashboard.formatting import format_mw, format_percent
-from src.dashboard.performance_data import test_metrics_frame as build_test_metrics_frame
+from src.dashboard.performance_data import (
+    best_baseline_comparison_frame,
+    test_metrics_frame as build_test_metrics_frame,
+    tuning_metrics_frame,
+    validation_metrics_frame,
+    worst_cases_frame,
+)
 
 
 def _snapshot() -> dict:
@@ -60,9 +72,49 @@ def test_forecast_markers_are_not_connected_or_interpolated() -> None:
 def test_historical_test_metrics_match_published_values() -> None:
     frame = build_test_metrics_frame().set_index("horizon")
 
-    assert frame.loc["1h"].to_dict() == TEST_METRICS["1h"]
-    assert frame.loc["6h"].to_dict() == TEST_METRICS["6h"]
+    assert frame.loc["1h", "mae_mw"] == 149.63
+    assert frame.loc["6h", "mape_pct"] == 3.06
+    assert frame.loc["24h", "mae_mw"] == 370.85
+    assert frame.loc["24h", "rmse_mw"] == 526.98
+    assert frame.loc["24h", "r2"] == 0.843
     assert frame.loc["24h"].to_dict() == TEST_METRICS["24h"]
+
+
+def test_model_analysis_keeps_validation_and_test_identified() -> None:
+    tuning = tuning_metrics_frame()
+    final = tuning.loc[tuning["stage"] == "Teste final"]
+
+    assert set(final["split"]) == {"Teste"}
+    assert final.set_index("horizon").loc["24h", "mae_mw"] == 370.85
+    assert validation_metrics_frame().shape[0] == 9
+    assert worst_cases_frame().set_index("horizon").loc[
+        "24h", "absolute_error_mw"
+    ] == 3703.68
+
+
+def test_final_models_improve_on_best_mae_baselines() -> None:
+    comparison = best_baseline_comparison_frame().set_index("horizon")
+
+    assert (comparison["model_mae_mw"] < comparison["baseline_mae_mw"]).all()
+    assert comparison.loc["1h", "mae_reduction_pct"] == pytest.approx(
+        53.74, abs=0.01
+    )
+    assert comparison.loc["6h", "mae_reduction_pct"] == pytest.approx(
+        29.19, abs=0.01
+    )
+    assert comparison.loc["24h", "mae_reduction_pct"] == pytest.approx(
+        34.31, abs=0.01
+    )
+
+
+def test_model_analysis_charts_use_real_series() -> None:
+    baseline_figure = baseline_comparison_chart(best_baseline_comparison_frame())
+    validation_figure = validation_model_chart(validation_metrics_frame(), "mae_mw")
+    tuning_figure = tuning_history_chart(tuning_metrics_frame(), "mae_mw")
+
+    assert len(baseline_figure.data) == 2
+    assert len(validation_figure.data) == 3
+    assert len(tuning_figure.data) == 6
 
 
 def test_portuguese_number_formatting() -> None:

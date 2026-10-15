@@ -26,11 +26,36 @@ HORIZON_COLORS = {
     "24h": "#7C3AED",
 }
 
-# Resultados do conjunto de teste fornecidos na especificacao da interface.
+# Resultados finais do conjunto de teste do modelo tunado, consolidados em
+# notebooks/07_explainability.ipynb. O sinal do vies e observado - previsto.
 TEST_METRICS = {
-    "1h": {"mae_mw": 149.63, "rmse_mw": 203.60, "mape_pct": 1.14},
-    "6h": {"mae_mw": 399.32, "rmse_mw": 516.20, "mape_pct": 3.06},
-    "24h": {"mae_mw": 303.44, "rmse_mw": 418.48, "mape_pct": 2.33},
+    "1h": {
+        "mae_mw": 149.63,
+        "rmse_mw": 203.60,
+        "mape_pct": 1.14,
+        "r2": 0.976,
+        "bias_mw": 2.69,
+        "max_abs_error_mw": 1295.48,
+        "feature_count": 22,
+    },
+    "6h": {
+        "mae_mw": 399.32,
+        "rmse_mw": 516.20,
+        "mape_pct": 3.06,
+        "r2": 0.849,
+        "bias_mw": 1.48,
+        "max_abs_error_mw": 2686.67,
+        "feature_count": 29,
+    },
+    "24h": {
+        "mae_mw": 370.85,
+        "rmse_mw": 526.98,
+        "mape_pct": 2.86,
+        "r2": 0.843,
+        "bias_mw": 35.46,
+        "max_abs_error_mw": 3703.68,
+        "feature_count": 15,
+    },
 }
 
 DISCLAIMER = (

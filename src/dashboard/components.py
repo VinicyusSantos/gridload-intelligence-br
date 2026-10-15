@@ -110,6 +110,7 @@ def performance_card(horizon: str, metrics: dict[str, float]) -> None:
           <div class="grid-card-meta">MAPE no conjunto de teste</div>
           <div class="grid-kpi-row"><span>MAE</span><strong>{escape(format_mw(metrics['mae_mw'], 2))}</strong></div>
           <div class="grid-kpi-row"><span>RMSE</span><strong>{escape(format_mw(metrics['rmse_mw'], 2))}</strong></div>
+          <div class="grid-kpi-row"><span>R²</span><strong>{escape(f"{metrics['r2']:.3f}")}</strong></div>
         </div>
         """,
         unsafe_allow_html=True,

@@ -187,3 +187,170 @@ def residual_chart(predictions: pd.DataFrame) -> go.Figure:
     figure.add_hline(y=0, line_width=1, line_color="#94A3B8")
     figure.update_yaxes(title="Real - previsto (MW)")
     return _layout(figure, height=390)
+
+
+def baseline_comparison_chart(comparison: pd.DataFrame) -> go.Figure:
+    """Compara o MAE final do XGBoost ao melhor baseline de cada horizonte."""
+    figure = go.Figure()
+    figure.add_trace(
+        go.Bar(
+            x=comparison["horizon"],
+            y=comparison["baseline_mae_mw"],
+            name="Melhor baseline",
+            marker_color="#94A3B8",
+            customdata=comparison[["best_baseline"]],
+            hovertemplate=(
+                "%{x}<br>%{customdata[0]}<br>MAE: <b>%{y:,.2f} MW</b>"
+                "<extra></extra>"
+            ),
+        )
+    )
+    figure.add_trace(
+        go.Bar(
+            x=comparison["horizon"],
+            y=comparison["model_mae_mw"],
+            name="XGBoost tunado",
+            marker_color="#2563EB",
+            customdata=comparison[["mae_reduction_pct"]],
+            hovertemplate=(
+                "%{x}<br>MAE: <b>%{y:,.2f} MW</b><br>"
+                "Redução: %{customdata[0]:.1f}%<extra></extra>"
+            ),
+        )
+    )
+    figure.update_layout(barmode="group")
+    figure.update_yaxes(title="MAE (MW)")
+    return _layout(figure, height=410)
+
+
+def validation_model_chart(frame: pd.DataFrame, metric: str) -> go.Figure:
+    """Compara familias de modelos no mesmo conjunto de validacao."""
+    labels = {
+        "mae_mw": ("MAE (MW)", ",.2f"),
+        "rmse_mw": ("RMSE (MW)", ",.2f"),
+        "mape_pct": ("MAPE (%)", ".2f"),
+    }
+    if metric not in labels:
+        raise ValueError(f"Metrica de validacao desconhecida: {metric}")
+
+    title, number_format = labels[metric]
+    colors = {
+        "Regressao linear": "#94A3B8",
+        "Random Forest": "#0F766E",
+        "XGBoost base": "#7C3AED",
+    }
+    figure = go.Figure()
+    for model in ("Regressao linear", "Random Forest", "XGBoost base"):
+        subset = frame.loc[frame["model"] == model]
+        figure.add_trace(
+            go.Bar(
+                x=subset["horizon"],
+                y=subset[metric],
+                name=model,
+                marker_color=colors[model],
+                customdata=subset[["feature_set"]],
+                hovertemplate=(
+                    "%{x}<br>%{customdata[0]}<br>"
+                    f"{title}: <b>%{{y:{number_format}}}</b><extra></extra>"
+                ),
+            )
+        )
+    figure.update_layout(barmode="group")
+    figure.update_yaxes(title=title)
+    return _layout(figure, height=420)
+
+
+def tuning_history_chart(frame: pd.DataFrame, metric: str) -> go.Figure:
+    """Mostra validacao, tuning e teste final sem ocultar a troca de particao."""
+    labels = {
+        "mae_mw": "MAE (MW)",
+        "rmse_mw": "RMSE (MW)",
+        "mape_pct": "MAPE (%)",
+    }
+    if metric not in labels:
+        raise ValueError(f"Metrica de tuning desconhecida: {metric}")
+
+    figure = go.Figure()
+    for horizon in HORIZONS:
+        subset = frame.loc[frame["horizon"] == horizon].sort_values("stage")
+        figure.add_trace(
+            go.Scatter(
+                x=subset["stage"].astype(str),
+                y=subset[metric],
+                mode="lines+markers",
+                name=horizon,
+                line=dict(color=HORIZON_COLORS[horizon], width=2.5),
+                marker=dict(size=9),
+                customdata=subset[["split"]],
+                hovertemplate=(
+                    "%{x}<br>%{customdata[0]}<br>"
+                    f"{labels[metric]}: <b>%{{y:.2f}}</b><extra></extra>"
+                ),
+            )
+        )
+        final = subset.loc[subset["split"] == "Teste"]
+        figure.add_trace(
+            go.Scatter(
+                x=final["stage"].astype(str),
+                y=final[metric],
+                mode="markers",
+                marker=dict(
+                    color=HORIZON_COLORS[horizon],
+                    size=13,
+                    symbol="diamond",
+                    line=dict(color="#FFFFFF", width=2),
+                ),
+                showlegend=False,
+                hoverinfo="skip",
+            )
+        )
+    figure.update_yaxes(title=labels[metric])
+    return _layout(figure, height=430)
+
+
+def model_diagnostics_chart(metrics: pd.DataFrame) -> go.Figure:
+    """Resume qualidade de ajuste, vies e cauda de erro do teste final."""
+    figure = make_subplots(
+        rows=1,
+        cols=3,
+        subplot_titles=("R²", "Viés observado - previsto", "Maior erro absoluto"),
+    )
+    colors = [HORIZON_COLORS[horizon] for horizon in metrics["horizon"]]
+    figure.add_trace(
+        go.Bar(
+            x=metrics["horizon"],
+            y=metrics["r2"],
+            marker_color=colors,
+            showlegend=False,
+            hovertemplate="%{x}<br>R²: <b>%{y:.3f}</b><extra></extra>",
+        ),
+        row=1,
+        col=1,
+    )
+    figure.add_trace(
+        go.Bar(
+            x=metrics["horizon"],
+            y=metrics["bias_mw"],
+            marker_color=colors,
+            showlegend=False,
+            hovertemplate="%{x}<br>Viés: <b>%{y:+.2f} MW</b><extra></extra>",
+        ),
+        row=1,
+        col=2,
+    )
+    figure.add_trace(
+        go.Bar(
+            x=metrics["horizon"],
+            y=metrics["max_abs_error_mw"],
+            marker_color=colors,
+            showlegend=False,
+            hovertemplate="%{x}<br>Erro: <b>%{y:,.2f} MW</b><extra></extra>",
+        ),
+        row=1,
+        col=3,
+    )
+    figure.add_hline(y=0, line_width=1, line_color="#94A3B8", row=1, col=2)
+    figure.update_yaxes(range=[0, 1], row=1, col=1)
+    figure.update_yaxes(title="MW", row=1, col=2)
+    figure.update_yaxes(title="MW", row=1, col=3)
+    return _layout(figure, height=410)
